@@ -688,6 +688,18 @@
   .set-btn.primary{ background:var(--accent); color:#0D0D0F; border-color:var(--accent); margin-left:auto; }
   .set-btn.primary:hover{ filter:brightness(1.06); }
   .set-hint{ font-size:11.5px; color:var(--faint); line-height:1.5; margin:14px 0 0; } .set-hint a{ color:var(--muted); } .set-hint code{ font-family:var(--font-mono); background:var(--sunken); padding:2px 6px; border-radius:5px; color:var(--muted); }
+  /* welcome tutorial */
+  .tut{ position:fixed; inset:0; z-index:485; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(8,8,10,.62); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+  .tut.open{ display:flex; animation:zfade .2s var(--ease); }
+  .tut-card{ width:min(440px,94vw); background:var(--surface); border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow-lift); padding:30px 28px 20px; text-align:center; animation:popin .22s var(--ease); }
+  .tut-emoji{ font-size:42px; line-height:1; margin-bottom:14px; }
+  .tut-title{ font-family:var(--font-display); font-weight:800; font-size:24px; letter-spacing:-.02em; margin:0 0 10px; }
+  .tut-body{ font-size:14px; line-height:1.6; color:var(--muted); margin:0 auto 20px; max-width:344px; min-height:72px; } .tut-body b{ color:var(--ink); font-weight:600; } .tut-body kbd{ font-family:var(--font-mono); font-size:11.5px; background:var(--sunken); border:1px solid var(--line-soft); border-radius:5px; padding:1px 5px; color:var(--ink); }
+  .tut-dots{ display:flex; gap:7px; justify-content:center; margin-bottom:20px; }
+  .tut-dot{ width:7px; height:7px; border-radius:50%; background:var(--line); transition:background .2s, width .2s; } .tut-dot.on{ background:var(--accent); width:20px; border-radius:4px; }
+  .tut-foot{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .tut-skip{ appearance:none; border:0; background:transparent; color:var(--faint); font-family:var(--font-ui); font-size:13px; cursor:pointer; padding:6px; } .tut-skip:hover{ color:var(--muted); }
+  .tut-nav{ display:flex; gap:8px; align-items:center; }
   /* command palette */
   .cmdk{ position:fixed; inset:0; z-index:450; display:none; align-items:flex-start; justify-content:center; padding-top:13vh; background:rgba(8,8,10,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
   .cmdk.open{ display:flex; animation:zfade .16s var(--ease); }
@@ -977,6 +989,8 @@
       <button class="am-item" id="amTheme" role="menuitem"><span>Theme</span><span class="am-meta" id="amThemeVal">Dark</span></button>
       <button class="am-item" id="amDnd" role="menuitem"><span>Do Not Disturb</span><span class="am-meta" id="amDndVal">Off</span></button>
       <button class="am-item" id="amSettings" role="menuitem"><span>Voice &amp; AI…</span><span class="am-meta">Local</span></button>
+      <button class="am-item" id="amTutorial" role="menuitem"><span>Tutorial</span><span class="am-meta">Replay</span></button>
+      <button class="am-item" id="amReset" role="menuitem"><span>Start fresh…</span><span class="am-meta">Clear all</span></button>
       <button class="am-item" id="amShortcuts" role="menuitem"><span>Keyboard shortcuts</span><span class="am-meta">⌘K</span></button>
       <button class="am-item" id="amAbout" role="menuitem"><span>About Desk</span><span class="am-meta">v1.0</span></button>
     </div>
@@ -1155,6 +1169,23 @@
       </div>
     </div>
 
+    <div class="tut" id="tut" aria-hidden="true">
+      <div class="tut-card">
+        <div class="tut-emoji" id="tutEmoji">👋</div>
+        <h2 class="tut-title" id="tutTitle">Welcome to Desk</h2>
+        <p class="tut-body" id="tutBody"></p>
+        <div class="tut-dots" id="tutDots"></div>
+        <div class="tut-foot">
+          <button class="tut-skip" id="tutSkip">Skip</button>
+          <div class="tut-nav">
+            <button class="set-btn ghost" id="tutBack">Back</button>
+            <button class="set-btn ghost" id="tutSample" hidden>Load sample data</button>
+            <button class="set-btn primary" id="tutNext">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="cmdk" id="cmdk" aria-hidden="true">
       <div class="cmdk-panel">
         <input class="cmdk-input" id="cmdkInput" type="text" placeholder="Search tasks, lists, canvases — or run a command…" aria-label="Command palette" />
@@ -1286,6 +1317,18 @@
       { id:'g-run',  name:'Run 50 km this month', target:50, unit:'km', sources:[], manual:18, createdAt:toISO(dPlus(-14)) },
     ],
   };
+  /* The data above is DEMO/sample content — for screenshots + opt-in exploring, never forced on a
+     first-time user. On first run we start clean (see hydrate); "Load sample data" restores this. */
+  let SAMPLE=null, tutorialSeen=false;
+  function cleanSections(){ return {
+    office:{ label:'Office', projects:[{ id:'o-inbox', name:'Inbox', inbox:true, tasks:[] }] },
+    building:{ label:'Building', projects:[{ id:'b-inbox', name:'Inbox', inbox:true, tasks:[] }] } }; }
+  function startClean(){ state.sections=cleanSections(); state.stickies={}; state.ink={}; state.habits=[]; state.goals=[]; state.active='office'; state.canvasPid=null; state.calSel=null; }
+  function renderEverything(){ try{ renderBoard(); renderCal(); renderFocus(); renderDesktop();
+    if(state.view==='goals' && typeof renderGoals==='function') renderGoals();
+    if(state.view==='stickies'){ if(typeof renderCanvasNav==='function') renderCanvasNav(); if(typeof renderCanvas==='function') renderCanvas(); }
+    pushWidgets(); }catch(_){} }
+  function loadSampleData(){ if(!SAMPLE) return; try{ applySaved(JSON.parse(JSON.stringify(SAMPLE))); }catch(_){} schedulePersist(); renderEverything(); toast('Loaded sample data — clear it anytime from the Desk ▾ menu'); }
   const URLRE=/^https?:\/\//i;
   function normUrl(u){ if(!u) return null; u=u.trim(); if(!u) return null; if(!URLRE.test(u)) u='https://'+u; try{ const o=new URL(u); return /\./.test(o.hostname)?o:null; }catch(_){ return null; } }
   const hostOf=u=>u.hostname.replace(/^www\./,'');
@@ -1955,6 +1998,8 @@
     const amDndVal=$('amDndVal'); window.__syncDnd=()=>{ if(amDndVal) amDndVal.textContent=dnd?'On':'Off'; }; window.__syncDnd();
     const amDnd=$('amDnd'); if(amDnd) amDnd.addEventListener('click', ()=>{ dnd=!dnd; window.__syncDnd(); schedulePersist(); toast(dnd?'Do Not Disturb on — sounds & alerts paused':'Do Not Disturb off'); if(!dnd){ try{ sysSound('open'); }catch(_){} } });
     const amSet=$('amSettings'); if(amSet) amSet.addEventListener('click', ()=>{ setMenu(false); if(window.__openSettings) window.__openSettings(); });
+    const amTut=$('amTutorial'); if(amTut) amTut.addEventListener('click', ()=>{ setMenu(false); if(window.__openTutorial) window.__openTutorial(); });
+    const amRst=$('amReset'); if(amRst) amRst.addEventListener('click', ()=>{ setMenu(false); const snap=serializeState(); startClean(); renderEverything(); schedulePersist(); toast('Cleared to a fresh start', 'Undo', ()=>{ applySaved(snap); schedulePersist(); renderEverything(); }); });
     const amSc=$('amShortcuts'); if(amSc) amSc.addEventListener('click', ()=>{ setMenu(false); toast('⌘K commands · ⌥⌘Space capture · ⌥⌘V voice'); });
     const amAb=$('amAbout'); if(amAb) amAb.addEventListener('click', ()=>{ setMenu(false); toast('Desk · private, local-first workspace'); });
   })();
@@ -2171,10 +2216,10 @@
   function serializeState(){ const secs={}; for(const k in state.sections){ const s=state.sections[k]; secs[k]={ label:s.label, projects:s.projects.map(p=>({ id:p.id, name:p.name, inbox:!!p.inbox, refs:p.refs||null, tasks:p.tasks.map(t=>({ id:t.id, title:t.title, done:!!t.done, status:t.status||null, due:t.due?toISO(t.due):null, dueTime:t.dueTime||null, tags:t.tags||null, url:t.url||null, host:t.host||null, fav:t.fav||null, subs:(Array.isArray(t.subs)&&t.subs.length)?t.subs.map(s=>({id:s.id,title:s.title,done:!!s.done})):null })) })) }; }
     const habits=state.habits.map(h=>({ id:h.id, name:h.name, emoji:h.emoji||null, target:h.target||null, schedule:h.schedule||'daily', log:h.log||{}, createdAt:h.createdAt||null, archived:!!h.archived }));
     const goals=state.goals.map(g=>({ id:g.id, name:g.name, target:g.target, unit:g.unit||null, deadline:g.deadline||null, sources:g.sources||[], manual:g.manual||0, createdAt:g.createdAt||null, done:!!g.done }));
-    return { v:1, theme:dark?'dark':'light', active:state.active, sections:secs, stickies:state.stickies, ink:state.ink, habits, goals, dnd:!!dnd, settings:{ ollamaHost:settings.ollamaHost, ollamaModel:settings.ollamaModel } }; }
+    return { v:1, theme:dark?'dark':'light', active:state.active, sections:secs, stickies:state.stickies, ink:state.ink, habits, goals, dnd:!!dnd, tutorialSeen:!!tutorialSeen, settings:{ ollamaHost:settings.ollamaHost, ollamaModel:settings.ollamaModel } }; }
   function persistNow(){ try{ idbSet(DB_KEY, serializeState()).catch(()=>{}); }catch(_){} }
   let _pTimer=null; function schedulePersist(){ clearTimeout(_pTimer); _pTimer=setTimeout(persistNow, 500); scheduleWidgets(); }
-  function hydrate(){ return idbGet(DB_KEY).then(saved=>{ if(!saved||saved.v!==1) return;
+  function applySaved(saved){
     /* dark-only for the moment: theme is forced dark, ignore saved theme */
     if(saved.active && state.sections[saved.active]){ state.active=saved.active; app.dataset.section=saved.active; segBtns.forEach(x=>{ const on=x.dataset.sec===saved.active; x.classList.toggle('is-active',on); x.setAttribute('aria-checked',on); }); }
     if(saved.sections){ for(const k in saved.sections){ if(!state.sections[k]) continue; const ss=saved.sections[k]; if(ss.label) state.sections[k].label=ss.label;
@@ -2185,8 +2230,11 @@
     if(Array.isArray(saved.goals)) state.goals=saved.goals.map(g=>({ id:g.id, name:g.name, target:+g.target||0, unit:g.unit||undefined, deadline:g.deadline||undefined, sources:Array.isArray(g.sources)?g.sources:[], manual:+g.manual||0, createdAt:g.createdAt||toISO(today), done:!!g.done }));
     if(typeof saved.dnd==='boolean'){ dnd=saved.dnd; if(window.__syncDnd) window.__syncDnd(); }
     if(saved.settings && typeof saved.settings==='object'){ if(typeof saved.settings.ollamaHost==='string'&&saved.settings.ollamaHost) settings.ollamaHost=saved.settings.ollamaHost; if(typeof saved.settings.ollamaModel==='string'&&saved.settings.ollamaModel) settings.ollamaModel=saved.settings.ollamaModel; }
+    if(typeof saved.tutorialSeen==='boolean') tutorialSeen=saved.tutorialSeen;
     Object.values(state.sections).forEach(sec=>sec.projects.forEach(p=>p.tasks.forEach(t=>{ if(!t.status) t.status=t.done?'done':(t.due?'doing':'backlog'); })));
-  }).catch(()=>{}); }
+  }
+  // First launch (nothing saved) → start clean and signal the welcome tutorial. Returning users load their data.
+  function hydrate(){ return idbGet(DB_KEY).then(saved=>{ if(saved && saved.v===1){ applySaved(saved); return false; } startClean(); return true; }).catch(()=>false); }
   function refreshToday(){ const n=new Date(); n.setHours(0,0,0,0); if(n.getTime()!==today.getTime()){ today=n; renderBoard(); renderCal(); } }
   const _persist=fn=>function(){ const r=fn.apply(this,arguments); schedulePersist(); return r; };
   renderBoard=_persist(renderBoard); renderMini=_persist(renderMini); renderInk=_persist(renderInk);
@@ -2518,6 +2566,33 @@
     try{ if(window.desk && window.desk.onFullScreen) window.desk.onFullScreen(v=> setShown(v)); }catch(_){}
   })();
 
+  /* ---- Welcome tutorial (first run + replayable from the Desk ▾ menu) ---- */
+  (function(){
+    const modal=$('tut'); if(!modal) return;
+    const eEl=$('tutEmoji'), tEl=$('tutTitle'), bEl=$('tutBody'), dots=$('tutDots'), back=$('tutBack'), next=$('tutNext'), sample=$('tutSample'), skip=$('tutSkip');
+    const STEPS=[
+      { e:'👋', t:'Welcome to Desk', b:'A calm workspace that’s really a tiny desktop OS. Everything lives <b>on your device</b> — no account, no cloud, no sign-in.' },
+      { e:'🗂️', t:'Apps & workspaces', b:'Open <b>Tasks</b>, <b>Pipeline</b>, <b>Stickies</b> and <b>Goals</b> from the dock (<kbd>⌘1</kbd>–<kbd>⌘4</kbd>). <kbd>⌘0</kbd> goes home, <kbd>Esc</kbd> backs out. Switch workspaces from the <b>Desk ▾</b> menu.' },
+      { e:'🧑‍💻', t:'A buddy + your voice', b:'In the Mac app a pixel <b>buddy</b> lives on your desktop — click it to focus or capture, and it grooves to music. Talk to Desk with <kbd>⌥⌘V</kbd> (local Whisper + your own LLM).' },
+      { e:'✨', t:'Start your way', b:'You’re on a <b>clean slate</b>. Want to look around first? Load some sample data — you can clear it anytime from the <b>Desk ▾</b> menu.' }
+    ];
+    let i=0;
+    dots.innerHTML=STEPS.map(()=>'<span class="tut-dot"></span>').join('');
+    function render(){ const s=STEPS[i]; eEl.textContent=s.e; tEl.textContent=s.t; bEl.innerHTML=s.b;
+      [...dots.children].forEach((d,k)=>d.classList.toggle('on',k===i));
+      back.style.visibility=i===0?'hidden':'visible';
+      const last=i===STEPS.length-1; next.textContent=last?'Get started':'Next'; sample.hidden=!last; }
+    function open(){ i=0; render(); modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); document.addEventListener('keydown', key); }
+    function done(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); document.removeEventListener('keydown', key); tutorialSeen=true; schedulePersist(); }
+    function key(e){ if(e.key==='Escape') done(); else if(e.key==='ArrowRight') next.click(); else if(e.key==='ArrowLeft') back.click(); }
+    back.addEventListener('click', ()=>{ if(i>0){ i--; render(); } });
+    next.addEventListener('click', ()=>{ if(i<STEPS.length-1){ i++; render(); } else done(); });
+    sample.addEventListener('click', ()=>{ loadSampleData(); done(); });
+    skip.addEventListener('click', done);
+    modal.addEventListener('click', e=>{ if(e.target===modal) done(); });
+    window.__openTutorial=open;
+  })();
+
   /* ---- Settings · Voice & AI (point Desk at your Ollama host/model; test the connection) ---- */
   (function(){
     const modal=$('setModal'); if(!modal) return;
@@ -2547,8 +2622,11 @@
     window.__openSettings=open;
   })();
 
-  hydrate().then(()=>{ renderBoard(); renderFocus(); renderCal(); renderDesktop(); pushWidgets(); applyWallpaper(true);
+  SAMPLE = serializeState();   // snapshot the built-in demo (saved-shape) BEFORE hydrate; "Load sample data" restores it
+  delete SAMPLE.dnd; delete SAMPLE.settings; delete SAMPLE.tutorialSeen; delete SAMPLE.theme;   // sample carries data only
+  hydrate().then((firstRun)=>{ renderBoard(); renderFocus(); renderCal(); renderDesktop(); pushWidgets(); applyWallpaper(true);
     try{ window.desk&&window.desk.voiceSetConfig&&window.desk.voiceSetConfig(settings); }catch(_){}   // sync the saved Ollama host/model to main
+    if(firstRun){ schedulePersist(); setTimeout(()=>{ if(window.__openTutorial) window.__openTutorial(); }, 5400); }  // clean slate saved + welcome after boot
     setTimeout(hideSplash, 5000); });
   setTimeout(hideSplash, 9000);
 </script>
