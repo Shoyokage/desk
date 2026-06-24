@@ -2334,7 +2334,7 @@
   (function(){
     if(window.desk && window.desk.onQuickCapture){ window.desk.onQuickCapture(text=>{ if(!text||!text.trim()) return; const sec=state.sections[state.active], inbox=sec.projects.find(p=>p.inbox)||sec.projects[0]; const {title,due,dueTime,tags}=parseQuickDue(text); if(!title) return; const t={id:'t'+(idc++),title,done:false}; if(due)t.due=due; if(dueTime)t.dueTime=dueTime; if(tags&&tags.length)t.tags=tags; inbox.tasks.push(t); renderBoard(); renderCal(); toast('Captured — '+title); }); }
     // calm "wake" chime on open: on launch (the loading screen) and whenever the window is reopened from the menu bar
-    if(window.desk){ setTimeout(()=>{ try{ playOpenSound(); }catch(_){} }, 160); if(window.desk.onAppShown) window.desk.onAppShown(()=>{ try{ hideOutro(); playOpenSound(); }catch(_){} }); if(window.desk.onAppClosing) window.desk.onAppClosing(()=>{ try{ showOutro(); }catch(_){} }); }
+    if(window.desk){ setTimeout(()=>{ try{ playOpenSound(); }catch(_){} }, 160); /* chime once per launch (cold start) only */ if(window.desk.onAppShown) window.desk.onAppShown(()=>{ try{ hideOutro(); }catch(_){} }); /* reopen from tray/minimize: no chime */ if(window.desk.onAppClosing) window.desk.onAppClosing(()=>{ try{ showOutro(); }catch(_){} }); }
     if(window.desk){ if(window.desk.onCompanionCmd) window.desk.onCompanionCmd(name=>{ try{ if(name==='due') setView('tasks'); else if(name==='focus') openZen(true); else setView('home'); }catch(_){} }); if(window.desk.onToast) window.desk.onToast(m=>{ try{ toast(m); }catch(_){} }); }
     if(typeof Notification==='undefined') return;
     if(Notification.permission==='default' && window.desk){ try{ Notification.requestPermission(); }catch(_){} }

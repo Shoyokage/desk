@@ -69,7 +69,7 @@ function showWin() {
   if (!win || win.isDestroyed()) { createWindow(); return; }
   const wasHidden = !win.isVisible();
   win.show(); win.focus();
-  if (wasHidden) win.webContents.send('app-shown'); // play the open chime only on a real reopen
+  if (wasHidden) win.webContents.send('app-shown'); // reopened from tray/minimize → renderer hides the outro (no chime; the chime is cold-start only)
 }
 
 function openCapture() {
