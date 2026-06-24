@@ -23,7 +23,7 @@ Tasks, a Pipeline kanban, a Stickies canvas, and Goals & Habits live inside swit
 |---|---|---|
 | **1. Web** | The full app, instantly | Open `app/index.html` in any modern browser. That's it. |
 | **2. PWA** | Installable, offline | Serve `/pwa` over http (e.g. `cd pwa && python3 -m http.server`), open it, and "Install" from the browser. |
-| **3. macOS app** | Menubar, desktop buddy, widgets, local voice + AI | **[⬇ Download the `.dmg`](https://github.com/Shoyokage/desk/releases/latest)** (Intel + Apple Silicon) · or build it: [`SETUP.md`](SETUP.md) |
+| **3. macOS app** | Menubar, desktop buddy, widgets, local voice + AI | **[⬇ Download the `.dmg`](https://github.com/Shoyokage/desk/releases/latest)** (Apple Silicon) · Intel Macs → use option 1 or 2 above · or build: [`SETUP.md`](SETUP.md) |
 
 > The web and PWA versions are the complete productivity app. The desktop buddy, Übersicht widgets, and local voice/AI are macOS-app features (they need OS integration + local processes).
 >
