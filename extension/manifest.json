@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Desk — Now Playing bridge",
+  "version": "1.0.0",
+  "description": "Sends whatever is playing in Chrome (title + artist) to the Desk app. Talks only to 127.0.0.1 — nothing leaves your machine.",
+  "permissions": ["scripting", "tabs"],
+  "host_permissions": ["http://127.0.0.1:7682/*", "http://*/*", "https://*/*"],
+  "background": { "service_worker": "np-bg.js" },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["np-main.js"],
+      "world": "MAIN",
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["np-content.js"],
+      "world": "ISOLATED",
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ]
+}

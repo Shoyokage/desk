@@ -1,0 +1,21 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+  html,body{ margin:0; height:100%; background:transparent; font-family:-apple-system,system-ui,sans-serif; }
+  .cap{ height:76px; margin:6px; display:flex; align-items:center; padding:0 16px; gap:12px;
+    background:rgba(20,20,22,.97); border:1px solid rgba(255,255,255,.12); border-radius:16px;
+    box-shadow:0 18px 50px rgba(0,0,0,.6); }
+  .dot{ width:11px; height:11px; border-radius:3px; background:#FF4A1C; flex:none; }
+  input{ flex:1; border:0; background:transparent; color:#F2F1ED; font-size:17px; outline:none; font-family:inherit; }
+  input::placeholder{ color:#6b6b66; }
+  .hint{ font-family:ui-monospace,monospace; font-size:10px; letter-spacing:.06em; color:#56564f; flex:none; }
+</style></head>
+<body>
+  <div class="cap"><span class="dot"></span><input id="i" placeholder="Quick capture to Desk…  (#tag · fri · 3pm)" autofocus><span class="hint">↵</span></div>
+  <script>
+    const i=document.getElementById('i'); setTimeout(()=>i.focus(),20);
+    i.addEventListener('keydown', e=>{
+      if(e.key==='Enter'){ const v=i.value.trim(); i.value=''; if(v && window.cap) window.cap.submit(v); }
+      else if(e.key==='Escape'){ if(window.cap) window.cap.cancel(); }
+    });
+  </script>
+</body></html>

@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# build output
+desktop/dist/
+dist/
+*.app
+
+# on-device model cache (Whisper auto-downloads on first use)
+desktop/models/
+models/
+.cache/
+
+# logs / env
+*.log
+npm-debug.log*
+.env
+.env.*
+
+# macOS / editor cruft
+.DS_Store
+**/.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# local data / media scratch
+*.mp4
+*.mp3
+desk-widgets.json
+desk-ai-config.json

@@ -1,0 +1,19 @@
+{
+  "name": "desk-desktop",
+  "version": "1.0.0",
+  "description": "Desk — the macOS (Electron) wrapper: menubar, desktop buddy, Übersicht bridge, and local voice + AI.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "sync": "node scripts/sync.js",
+    "package": "electron-packager . Desk --platform=darwin --arch=arm64 --icon=build/Desk.icns --app-bundle-id=com.desk.app --overwrite --out dist"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@electron/packager": "^18.3.6",
+    "electron": "^32.2.0"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.2.0"
+  }
+}

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Desk Companion</title>
+<style>
+  :root{ --accent:#FF4A1C; --ink:#F2F1ED; --surface:#161618; --line:rgba(255,255,255,.12); }
+  html,body{ margin:0; height:100%; background:transparent; overflow:hidden; -webkit-user-select:none; user-select:none; font-family:'Hanken Grotesk',-apple-system,system-ui,sans-serif; }
+  #stage{ position:fixed; inset:0; }
+  #sprite{ position:absolute; bottom:6px; left:50%; transform:translateX(-50%); image-rendering:auto; cursor:pointer; filter:drop-shadow(0 8px 14px rgba(0,0,0,.45)); transition:transform .12s cubic-bezier(.2,.7,.2,1), opacity .12s linear; }
+  #sprite.press{ transform:translateX(-50%) scale(.94); }
+  #sprite.hop{ animation:hop .5s cubic-bezier(.2,.7,.2,1); }
+  @keyframes hop{ 0%,100%{ transform:translateX(-50%) translateY(0);} 35%{ transform:translateX(-50%) translateY(-14px);} }
+  #bubble{ position:absolute; left:50%; transform:translateX(-50%) translateY(6px); top:6px; max-width:200px; background:var(--surface); color:var(--ink);
+    border:1px solid var(--line); border-radius:13px; padding:9px 12px; font-size:12.5px; line-height:1.4; box-shadow:0 14px 34px -12px rgba(0,0,0,.7);
+    opacity:0; pointer-events:none; transition:opacity .2s, transform .2s cubic-bezier(.2,.7,.2,1); text-align:center; }
+  #bubble.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  #bubble::after{ content:""; position:absolute; bottom:-6px; left:50%; transform:translateX(-50%) rotate(45deg); width:11px; height:11px; background:var(--surface); border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+  #bubble b{ color:var(--accent); font-weight:600; }
+  #drop{ position:absolute; left:50%; bottom:20px; transform:translateX(-50%); width:160px; text-align:center; color:var(--ink);
+    background:var(--surface); border:1px dashed var(--line); border-radius:14px; padding:14px 12px; font-size:11.5px; line-height:1.5; box-shadow:0 14px 34px -12px rgba(0,0,0,.7); }
+  #drop b{ color:var(--accent); }
+  #drop.hide{ display:none; }
+  @media (prefers-reduced-motion:reduce){ #sprite,#bubble{ transition:none !important; } #sprite.hop{ animation:none !important; } }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <div id="bubble"></div>
+    <canvas id="sprite" width="10" height="10" hidden></canvas>
+    <div id="drop">Drop the sprite sheets to wake me up</div>
+  </div>
+<script>
+(function(){
+  "use strict";
+  // ---- manifest: { w?|h?, default, anims:{ name:{file,cols,rows,fps} } } passed via ?manifest=<json> ----
+  const Q = new URLSearchParams(location.search);
+  let MAN = null;
+  try { MAN = JSON.parse(Q.get('manifest') || ''); } catch (e) {}
+  if (!MAN || !MAN.anims) {                       // back-compat single sheet
+    const cols = +Q.get('cols') || 1, rows = +Q.get('rows') || 1;
+    MAN = { w:+Q.get('w')||150, default:'idle', anims:{ idle:{ file:'sprite.png', cols, rows, fps:+Q.get('fps')||7 } } };
+  }
+  const BG_TOL = 38;
+  const $ = id => document.getElementById(id);
+  const spriteEl = $('sprite'), bubbleEl = $('bubble'), dropEl = $('drop');
+  const ctx = spriteEl.getContext('2d');
+  const bridge = window.companion || null;
+
+  const ANIMS = {};            // name -> { frames:[{cv,w,h}], fps }
+  let gMaxW = 0, gMaxH = 0, scale = 1;
+  let data = null, prev = null;
+
+  function showDrop(){ dropEl.classList.remove('hide'); spriteEl.hidden = true; }
+
+  function keyOut(im, w, h){            // flood-fill bg removal from the 4 corners (keeps interior whites)
+    const d = im.data, seen = new Uint8Array(w*h), stack = [];
+    const corners = [[0,0],[w-1,0],[0,h-1],[w-1,h-1]];
+    let rr=0,gg=0,bb=0,n=0;
+    for (const [cx,cy] of corners){ const i=(cy*w+cx)*4; if(d[i+3]>8){ rr+=d[i];gg+=d[i+1];bb+=d[i+2];n++; } }
+    if (!n) return;
+    rr/=n; gg/=n; bb/=n;
+    const match = i => Math.abs(d[i]-rr)<=BG_TOL && Math.abs(d[i+1]-gg)<=BG_TOL && Math.abs(d[i+2]-bb)<=BG_TOL;
+    for (const [cx,cy] of corners){ const p=cy*w+cx; if(!seen[p]){ seen[p]=1; stack.push(p); } }
+    while (stack.length){ const p=stack.pop(), x=p%w, y=(p/w)|0, i=p*4;
+      if (d[i+3]===0 || !match(i)) continue; d[i+3]=0;
+      if (x>0&&!seen[p-1]){seen[p-1]=1;stack.push(p-1);} if (x<w-1&&!seen[p+1]){seen[p+1]=1;stack.push(p+1);}
+      if (y>0&&!seen[p-w]){seen[p-w]=1;stack.push(p-w);} if (y<h-1&&!seen[p+w]){seen[p+w]=1;stack.push(p+w);} }
+  }
+  function bbox(im, w, h){ const d=im.data; let minX=w,minY=h,maxX=-1,maxY=-1;
+    for (let y=0;y<h;y++) for (let x=0;x<w;x++){ if(d[(y*w+x)*4+3]>16){ if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; } }
+    if (maxX<0) return null; return { x:minX, y:minY, w:maxX-minX+1, h:maxY-minY+1 }; }
+  function sliceSheet(img, cols, rows){
+    const fw=Math.floor(img.width/cols), fh=Math.floor(img.height/rows);
+    const cell=document.createElement('canvas'); cell.width=fw; cell.height=fh;
+    const cc=cell.getContext('2d',{ willReadFrequently:true }); const out=[];
+    for (let r=0;r<rows;r++) for (let c=0;c<cols;c++){
+      cc.clearRect(0,0,fw,fh); cc.drawImage(img,c*fw,r*fh,fw,fh,0,0,fw,fh);
+      const im=cc.getImageData(0,0,fw,fh); keyOut(im,fw,fh);
+      const box=bbox(im,fw,fh); if(!box) continue;
+      const cv=document.createElement('canvas'); cv.width=box.w; cv.height=box.h;
+      cv.getContext('2d').putImageData(im,-box.x,-box.y,box.x,box.y,box.w,box.h);
+      out.push({ cv, w:box.w, h:box.h });
+      if (box.w>gMaxW) gMaxW=box.w; if (box.h>gMaxH) gMaxH=box.h;
+    }
+    return out;
+  }
+
+  function loadAll(){
+    const names = Object.keys(MAN.anims); let pending = names.length, anyOk = false;
+    if (!pending) { showDrop(); return; }
+    names.forEach(name => {
+      const a = MAN.anims[name], img = new Image();
+      img.onload = () => { try { const fr = sliceSheet(img, a.cols, a.rows); if (fr.length){ ANIMS[name] = { frames:fr, fps:a.fps||7, task:a.task||null }; anyOk = true; } } catch(e){} done(); };
+      img.onerror = done;
+      img.src = a.file.startsWith('data:') ? a.file : (a.file + '?t=' + Date.now());
+    });
+    function done(){ if (--pending > 0) return; if (!anyOk){ showDrop(); return; } finalize(); start(); }
+  }
+  function finalize(){
+    scale = MAN.h ? (MAN.h/gMaxH) : ((MAN.w||150)/gMaxW);
+    spriteEl.width = Math.round(gMaxW*scale); spriteEl.height = Math.round(gMaxH*scale);
+    spriteEl.hidden = false; dropEl.classList.add('hide');
+    if (!ANIMS[cur]) cur = Object.keys(ANIMS)[0];
+    if (!ANIMS[taskMood]) taskMood = Object.keys(ANIMS)[0];
+  }
+  function draw(name, idx){ const a=ANIMS[name]; if(!a) return; const f=a.frames[idx]; if(!f) return;
+    ctx.clearRect(0,0,spriteEl.width,spriteEl.height); const dw=f.w*scale, dh=f.h*scale;
+    ctx.drawImage(f.cv, (spriteEl.width-dw)/2, spriteEl.height-dh, dw, dh); }
+
+  // ---- state machine ----
+  let cur = MAN.default || Object.keys(MAN.anims)[0];
+  let i = 0, dir = 1, last = 0;
+  let taskMood = MAN.default || 'calm';            // current mood == current task button
+  let musicPlaying = false;                         // now-playing → auto "groove" override (not a click mood)
+  const fps = () => (ANIMS[cur] && ANIMS[cur].fps) || 7;
+  const nFrames = () => (ANIMS[cur] && ANIMS[cur].frames.length) || 0;
+  function desiredAnim(){ if (musicPlaying && ANIMS.music) return 'music'; return ANIMS[taskMood] ? taskMood : cur; }
+  function setAnim(name){ if (name===cur || !ANIMS[name]) return; cur=name; i=0; dir=1; spriteEl.style.opacity='0'; setTimeout(()=>{ spriteEl.style.opacity='1'; }, 90); }
+  function tick(ts){ requestAnimationFrame(tick); if (!nFrames()) return;
+    const want = desiredAnim();
+    if (want !== cur) setAnim(want);
+    if (ts - last < 1000/fps()) return; last = ts;
+    const n = nFrames(); i += dir; if (i >= n-1){ i = n-1; dir = -1; } else if (i <= 0){ i = 0; dir = 1; }
+    draw(cur, i);
+  }
+
+  // ---- speech ----
+  let bubbleT = null;
+  function say(html, ms){ bubbleEl.innerHTML = html; bubbleEl.classList.add('show'); clearTimeout(bubbleT); bubbleT = setTimeout(()=>bubbleEl.classList.remove('show'), ms||2600); }
+  function hop(){ spriteEl.classList.remove('hop'); void spriteEl.offsetWidth; spriteEl.classList.add('hop'); }
+
+  // ---- click → toggle his mood; each mood runs its own Desk task ----
+  function prettyName(n){ const m={calm:'Calm', crunch:'Crunch'}; return m[n] || (n.charAt(0).toUpperCase()+n.slice(1)); }
+  const TASK_MSG = { focus:'Focus mode — heads down 🎯', capture:'Capture — quick, what’s up?', due:'Here’s what’s due', show:'Bringing Desk up' };
+  function onClick(){
+    spriteEl.classList.add('press'); setTimeout(()=>spriteEl.classList.remove('press'),140); hop();
+    const names = Object.keys(ANIMS).filter(n => n !== 'music'); if (!names.length) return;  // music is auto-only
+    const idx = names.indexOf(taskMood);
+    taskMood = names[(idx + 1) % names.length];        // toggle to the next mood
+    setAnim(taskMood);
+    const task = ANIMS[taskMood] && ANIMS[taskMood].task;
+    say(TASK_MSG[task] || (prettyName(taskMood) + ' mode'), 1900);
+    if (task && bridge && bridge.action) bridge.action(task);
+  }
+  spriteEl.addEventListener('click', onClick);
+
+  // ---- data + reactions ----
+  function onData(d){ data = d; if (!d) return;
+    if (prev){
+      const streakUp = ((d.momentum&&d.momentum.streak)||0) > ((prev.momentum&&prev.momentum.streak)||0);
+      const allDone = (d.momentum&&d.momentum.schedToday>0 && d.momentum.doneToday>=d.momentum.schedToday) &&
+                      !(prev.momentum&&prev.momentum.schedToday>0 && prev.momentum.doneToday>=prev.momentum.schedToday);
+      if (streakUp){ hop(); say('🔥 <b>'+d.momentum.streak+'</b>-day streak!', 2600); }
+      else if (allDone){ hop(); say('All habits done. 👏', 2600); }
+    }
+    prev = d;
+  }
+  if (bridge && bridge.onData) bridge.onData(onData);
+
+  // ---- now-playing → groove while a song plays (auto override; reverts to mood when it stops) ----
+  function setMusic(np){ const on = !!(np && np.playing && !np.cleared && np.title);
+    if (on && !musicPlaying){ hop(); say('🎧 <b>vibing</b>', 1800); }
+    musicPlaying = on; }
+  if (bridge && bridge.onNowPlaying) bridge.onNowPlaying(setMusic);
+  window.__setMusic = setMusic;                       // preview / test hook
+
+  // ---- click-through everywhere except the sprite ----
+  if (bridge && bridge.setIgnore){
+    let ignoring = true; bridge.setIgnore(true);
+    window.addEventListener('mousemove', e => {
+      const r = spriteEl.getBoundingClientRect();
+      const over = e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom;
+      if (over && ignoring){ ignoring=false; bridge.setIgnore(false); }
+      else if (!over && !ignoring){ ignoring=true; bridge.setIgnore(true); }
+    });
+  }
+
+  // debug hooks (harmless in prod; used for preview verification)
+  window.__dbg = { anims:()=>Object.keys(ANIMS).map(n=>n+':'+ANIMS[n].frames.length), cur:()=>cur, scale:()=>+scale.toFixed(2), w:()=>spriteEl.width, h:()=>spriteEl.height, setAnim, loadManifest:(m)=>{ MAN=m; gMaxW=gMaxH=0; for(const k in ANIMS) delete ANIMS[k]; cur=MAN.default||Object.keys(MAN.anims)[0]; loadAll(); } };
+
+  let started = false;
+  function start(){ if (started) return; started = true; requestAnimationFrame(tick); }
+  loadAll();
+})();
+</script>
+</body>
+</html>

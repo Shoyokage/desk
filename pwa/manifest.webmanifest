@@ -1,0 +1,17 @@
+{
+  "name": "Desk",
+  "short_name": "Desk",
+  "description": "A private focus instrument — tasks, sticky-note canvases, and deep work, all on your device.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "/desk/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0D0D0F",
+  "theme_color": "#0D0D0F",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

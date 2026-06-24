@@ -1,0 +1,9 @@
+{
+  "h": 188,
+  "default": "calm",
+  "anims": {
+    "calm":   { "file": "sprite-calm.png",   "cols": 5, "rows": 5, "fps": 6,  "task": "focus" },
+    "crunch": { "file": "sprite-crunch.png", "cols": 5, "rows": 5, "fps": 11, "task": "capture" },
+    "music":  { "file": "sprite-music.png",  "cols": 5, "rows": 5, "fps": 8,  "auto": "music" }
+  }
+}
