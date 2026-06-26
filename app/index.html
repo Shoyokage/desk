@@ -985,6 +985,8 @@
       <button class="am-item" id="amSettings" role="menuitem"><span>Voice &amp; AI…</span><span class="am-meta">Local</span></button>
       <button class="am-item" id="amTutorial" role="menuitem"><span>Tutorial</span><span class="am-meta">Replay</span></button>
       <button class="am-item" id="amReset" role="menuitem"><span>Start fresh…</span><span class="am-meta">Clear all</span></button>
+      <button class="am-item" id="amExport" role="menuitem"><span>Export…</span><span class="am-meta">JSON</span></button>
+      <button class="am-item" id="amImport" role="menuitem"><span>Import…</span><span class="am-meta">JSON</span></button>
       <button class="am-item" id="amShortcuts" role="menuitem"><span>Keyboard shortcuts</span><span class="am-meta">⌘K</span></button>
       <button class="am-item" id="amAbout" role="menuitem"><span>About Desk</span><span class="am-meta">v1.0</span></button>
     </div>
@@ -1994,6 +1996,8 @@
     const amSet=$('amSettings'); if(amSet) amSet.addEventListener('click', ()=>{ setMenu(false); if(window.__openSettings) window.__openSettings(); });
     const amTut=$('amTutorial'); if(amTut) amTut.addEventListener('click', ()=>{ setMenu(false); if(window.__openTutorial) window.__openTutorial(); });
     const amRst=$('amReset'); if(amRst) amRst.addEventListener('click', ()=>{ setMenu(false); const snap=serializeState(); startClean(); renderEverything(); schedulePersist(); toast('Cleared to a fresh start', 'Undo', ()=>{ applySaved(snap); schedulePersist(); renderEverything(); }); });
+    const amExp=$('amExport'); if(amExp) amExp.addEventListener('click', ()=>{ setMenu(false); downloadExport(); });
+    const amImp=$('amImport'); if(amImp) amImp.addEventListener('click', ()=>{ setMenu(false); pickAndImport(); });
     const amSc=$('amShortcuts'); if(amSc) amSc.addEventListener('click', ()=>{ setMenu(false); toast('⌘K commands · ⌥⌘Space capture · ⌥⌘V voice'); });
     const amAb=$('amAbout'); if(amAb) amAb.addEventListener('click', ()=>{ setMenu(false); toast('Desk · private, local-first workspace'); });
   })();
@@ -2227,6 +2231,72 @@
     if(typeof saved.tutorialSeen==='boolean') tutorialSeen=saved.tutorialSeen;
     Object.values(state.sections).forEach(sec=>sec.projects.forEach(p=>p.tasks.forEach(t=>{ if(!t.status) t.status=t.done?'done':(t.due?'doing':'backlog'); })));
   }
+  /* ---- Export / Import (full state round-trip · for backup + v2 migration) ---- */
+  function exportToJson(){
+    const payload = serializeState();
+    // Stamp the export with metadata so future versions can detect provenance.
+    const wrapped = { kind:'desk-backup', exportedAt:new Date().toISOString(), appVersion:'1.0', state:payload };
+    return JSON.stringify(wrapped, null, 2);
+  }
+  function downloadExport(){
+    const stamp = new Date().toISOString().slice(0,10);
+    try{
+      dl(new Blob([exportToJson()], {type:'application/json'}), 'desk-backup-' + stamp + '.json');
+      toast('Backup saved · desk-backup-' + stamp + '.json');
+    }catch(e){ toast('Backup failed — see console'); console.error('Backup failed:', e); }
+  }
+  // Test hook: returns the raw JSON string (Preview MCP can eval this to capture a backup).
+  window.__deskExport = exportToJson;
+  function importFromJson(jsonString){
+    let parsed;
+    try{ parsed = JSON.parse(jsonString); }
+    catch(e){ throw new Error('not valid JSON: ' + e.message); }
+    // Accept both the wrapped backup format AND a bare state blob (forward-compat
+    // with anyone hand-editing or with a future flat-format).
+    const state = (parsed && parsed.kind === 'desk-backup' && parsed.state) ? parsed.state : parsed;
+    if(!state || typeof state !== 'object' || state.v !== 1){
+      throw new Error('not a Desk v1 backup (missing state.v === 1)');
+    }
+    const snap = serializeState();   // snapshot current state for Undo
+    try{
+      applySaved(state);
+      schedulePersist();
+      renderEverything();
+      pushWidgets();
+    }catch(e){
+      // Mid-apply failure (rare: validated v===1 but malformed inner shape). Roll back to snap
+      // so the caller's toast surfaces failure without leaving the app half-imported.
+      applySaved(snap); schedulePersist(); renderEverything(); pushWidgets();
+      throw new Error('import broke mid-apply: ' + e.message);
+    }
+    return snap;                      // caller passes this into the undo handler
+  }
+  function pickAndImport(){
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = '.json,application/json';
+    inp.style.display = 'none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', ()=>{
+      const f = inp.files && inp.files[0];
+      inp.remove();
+      if(!f) return;
+      const rd = new FileReader();
+      rd.onerror = ()=>{ toast('Could not read that file'); };
+      rd.onload = ()=>{
+        try{
+          const snap = importFromJson(String(rd.result));
+          toast('Imported from ' + f.name, 'Undo', ()=>{ applySaved(snap); schedulePersist(); renderEverything(); pushWidgets(); toast('Import undone'); });
+        }catch(e){
+          console.error('importFromJson failed:', e);
+          toast('Import failed — ' + e.message);
+        }
+      };
+      rd.readAsText(f);
+    });
+    inp.click();
+  }
+  // Test hook: pass a JSON string; returns the previous-state snapshot for caller-driven undo.
+  window.__deskImport = importFromJson;
   // First launch (nothing saved) → start clean and signal the welcome tutorial. Returning users load their data.
   function hydrate(){ return idbGet(DB_KEY).then(saved=>{ if(saved && saved.v===1){ applySaved(saved); return false; } startClean(); return true; }).catch(()=>false); }
   function refreshToday(){ const n=new Date(); n.setHours(0,0,0,0); if(n.getTime()!==today.getTime()){ today=n; renderBoard(); renderCal(); } }

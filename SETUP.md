@@ -78,3 +78,13 @@ Desktop widgets that mirror your day (today · momentum · focus · activity hea
 ## Chrome "now playing" companion
 
 Lets the buddy groove when music plays in Chrome. See [`extension/README.md`](extension/README.md).
+
+---
+
+## Backup & restore
+
+**Export:** `Desk ▾ → Export…` saves your full state (tasks, pipeline, stickies, goals, habits, settings) to a single JSON file you can store anywhere — Dropbox, an external drive, an `~/Backups/` folder. The file is plain text and human-readable.
+
+**Import:** `Desk ▾ → Import…` reads a previously-exported JSON file and replaces your current state with it. An `Undo` toast appears for ~6 seconds in case you imported the wrong file.
+
+**Format:** the export wraps your state in `{kind:'desk-backup', exportedAt, appVersion, state:{...}}`. The `state` subtree is exactly what's written to IndexedDB, so future Desk versions (including v2) can import it.

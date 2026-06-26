@@ -56,6 +56,10 @@ The web app (`app/index.html`) is the source of truth. After editing it, run `cd
 
 A pixel sprite that lives on your desktop (or inside the app in full-screen). Click it to cycle moods — **calm** (start a focus session) and **crunch** (quick-capture) — and it automatically switches to a **music** groove whenever a song is playing (via the Chrome companion in `extension/`). Art lives in `app/*.png` + `desktop/app/sprite.json`.
 
+## Backup & restore
+
+Your data lives in IndexedDB on your machine. To move it, back it up, or migrate between devices: **Desk ▾ → Export…** writes the full state to `desk-backup-YYYY-MM-DD.json`; **Desk ▾ → Import…** reads one back. The Import shows an **Undo** toast for a few seconds in case you grabbed the wrong file — no destructive action without a way back.
+
 ## Privacy
 
 Everything is local. There is no telemetry, no account, no server. Voice and AI run on your own machine via Whisper and Ollama. The one network-touching convenience is the optional Chrome "now playing" bridge, which talks only to `127.0.0.1`.
