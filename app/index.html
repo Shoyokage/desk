@@ -2235,7 +2235,7 @@
   function exportToJson(){
     const payload = serializeState();
     // Stamp the export with metadata so future versions can detect provenance.
-    const wrapped = { kind:'desk-backup', exportedAt:new Date().toISOString(), appVersion:'1.0', state:payload };
+    const wrapped = { kind:'desk-backup', exportedAt:new Date().toISOString(), appVersion:'1.0.0', state:payload };
     return JSON.stringify(wrapped, null, 2);
   }
   function downloadExport(){
