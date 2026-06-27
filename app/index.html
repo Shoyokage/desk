@@ -618,25 +618,36 @@
   .voice-fab svg{ width:21px; height:21px; fill:currentColor; }
   .app[data-view="stickies"] .voice-fab{ bottom:88px; } /* clear the canvas toolbar */
   .app.voice-open .voice-fab{ opacity:0; pointer-events:none; transform:translateX(-50%) scale(.8); }
-  .voicep{ position:fixed; left:50%; transform:translateX(-50%); bottom:88px; z-index:130; width:380px; max-width:calc(100vw - 36px); max-height:min(70vh,560px); display:none; flex-direction:column; background:#161618; border:1px solid rgba(255,255,255,.09); border-radius:18px; box-shadow:0 24px 60px -16px rgba(0,0,0,.72), inset 0 1px 0 rgba(255,255,255,.04); overflow:hidden; }
-  .voicep.open{ display:flex; animation:voicepIn .2s var(--ease); }
-  @keyframes voicepIn{ from{ opacity:0; transform:translate(-50%,12px); } to{ opacity:1; transform:translate(-50%,0); } }
-  .vp-head{ display:flex; align-items:center; gap:8px; padding:12px 14px; border-bottom:1px solid var(--line-soft); }
-  .vp-title{ font-weight:700; font-size:13.5px; color:var(--ink); }
-  .vp-sub{ font-family:var(--font-mono); font-size:8.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); }
-  .vp-close{ margin-left:auto; appearance:none; border:0; background:transparent; color:var(--faint); font-size:18px; line-height:1; cursor:pointer; width:24px; height:24px; border-radius:6px; } .vp-close:hover{ color:var(--ink); background:var(--sunken); }
-  .vp-log{ flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:9px; min-height:96px; }
-  .vp-empty{ color:var(--faint); font-size:12.5px; text-align:center; margin:auto; max-width:250px; line-height:1.55; }
+  .voicep{ position:fixed; inset:0; z-index:200; display:none; flex-direction:column; align-items:center; padding:0 20px 26px;
+    background:radial-gradient(130% 95% at 50% -8%, #1A1510 0%, #0D0D0F 58%); }
+  .voicep.open{ display:flex; animation:zfade .26s var(--ease); }
+  .voicep .vp-close{ position:absolute; top:18px; right:20px; width:38px; height:38px; appearance:none; border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--muted); border-radius:50%; font-size:19px; line-height:1; cursor:pointer; z-index:3; transition:color .12s, border-color .12s; } .voicep .vp-close:hover{ color:var(--ink); border-color:var(--muted); }
+  .vp-head{ text-align:center; margin-top:clamp(26px,7vh,70px); }
+  .vp-title{ display:block; font-family:var(--font-display); font-weight:800; font-size:23px; letter-spacing:-.02em; color:var(--ink); }
+  .vp-sub{ display:block; font-family:var(--font-mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin-top:7px; }
+  .vp-stage{ display:flex; flex-direction:column; align-items:center; gap:12px; margin:clamp(8px,2.5vh,26px) 0 clamp(4px,1.5vh,14px); }
+  .vp-orb{ width:min(300px,50vw); height:min(300px,50vw); display:block; }
+  .vp-log{ width:min(560px,94vw); flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:9px; padding:4px 4px 10px; }
+  .vp-empty{ color:var(--faint); font-size:13px; text-align:center; margin:auto; max-width:360px; line-height:1.6; }
   .vp-msg{ max-width:85%; padding:8px 11px; border-radius:12px; font-size:13px; line-height:1.42; white-space:pre-wrap; overflow-wrap:anywhere; }
   .vp-msg.user{ align-self:flex-end; background:var(--accent-soft); color:var(--ink); border-bottom-right-radius:4px; }
   .vp-msg.assistant{ align-self:flex-start; background:var(--sunken); color:var(--ink); border-bottom-left-radius:4px; }
-  .vp-foot{ display:flex; align-items:center; gap:13px; padding:12px 14px; border-top:1px solid var(--line-soft); }
-  .vp-mic{ appearance:none; border:0; cursor:pointer; width:46px; height:46px; flex:none; border-radius:50%; background:var(--accent); color:#0D0D0F; display:grid; place-items:center; transition:transform .1s, background .2s; }
-  .vp-mic:hover{ transform:scale(1.05); } .vp-mic:active{ transform:scale(.94); } .vp-mic svg{ width:20px; height:20px; fill:currentColor; }
-  .vp-mic.listening{ background:#E5484D; color:#fff; animation:micpulse 1.2s ease-in-out infinite; }
-  .vp-mic.thinking{ background:var(--sunken); color:var(--muted); cursor:default; }
-  @keyframes micpulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(229,72,77,.5); } 50%{ box-shadow:0 0 0 11px rgba(229,72,77,0); } }
-  .vp-status{ font-size:12px; color:var(--muted); }
+  .vp-msg.action{ align-self:flex-start; background:transparent; color:var(--muted); font-family:var(--font-mono); font-size:11.5px; padding:2px 2px; }
+  .vp-confirm{ align-self:stretch; background:var(--sunken); border:1px solid var(--line); border-radius:13px; padding:11px 12px; animation:popin .16s var(--ease); }
+  .vp-confirm.committed{ opacity:.5; } .vp-confirm.committed .vpc-act{ display:none; }
+  .vpc-h{ font-family:var(--font-ui); font-weight:600; font-size:12.5px; color:var(--ink); margin-bottom:8px; }
+  .vpc-row{ display:flex; align-items:center; gap:8px; padding:5px 0; }
+  .vpc-kind{ flex:none; font-family:var(--font-mono); font-size:9px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); background:var(--accent-soft); padding:3px 7px; border-radius:5px; }
+  .vpc-txt{ font-size:12.5px; color:var(--ink); line-height:1.35; }
+  .vpc-act{ display:flex; gap:7px; justify-content:flex-end; margin-top:9px; }
+  .vpc-btn{ appearance:none; border:1px solid var(--line); background:transparent; color:var(--ink); font-family:var(--font-ui); font-size:12px; font-weight:600; padding:6px 14px; border-radius:9px; cursor:pointer; transition:border-color .12s, filter .12s; }
+  .vpc-btn.no:hover{ border-color:var(--muted); } .vpc-btn.yes{ background:var(--accent); color:#0D0D0F; border-color:var(--accent); } .vpc-btn.yes:hover{ filter:brightness(1.06); }
+  .vp-mic{ flex:none; appearance:none; border:0; cursor:pointer; width:64px; height:64px; border-radius:50%; background:var(--accent); color:#0D0D0F; display:grid; place-items:center; box-shadow:0 16px 44px -10px rgba(255,74,28,.55); transition:transform .14s var(--spring); }
+  .vp-mic:hover{ transform:scale(1.06); } .vp-mic:active{ transform:scale(.93); } .vp-mic svg{ width:26px; height:26px; fill:currentColor; }
+  .vp-mic.listening{ animation:micpulse 1.25s ease-in-out infinite; }
+  .vp-mic.thinking{ background:var(--sunken); color:var(--muted); cursor:default; box-shadow:none; }
+  @keyframes micpulse{ 0%,100%{ box-shadow:0 16px 44px -10px rgba(255,74,28,.5); } 50%{ box-shadow:0 16px 62px -4px rgba(255,74,28,.9); } }
+  .vp-status{ font-family:var(--font-mono); font-size:12.5px; letter-spacing:.03em; color:var(--muted); min-height:18px; text-align:center; }
   .tag-pop{ position:fixed; z-index:300; background:var(--glass); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow-lift); padding:12px; width:236px; animation:popin .16s var(--ease); }
   .tag-pop .tp-head{ font-family:var(--font-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); margin-bottom:9px; }
   .tag-pop .tp-current{ display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; }
@@ -1158,9 +1169,9 @@
           <p class="set-note">Desk's voice &amp; AI run <b>100% on your machine</b> — speech via Whisper, intent via a local model through <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a>. Nothing leaves your device. This is optional — Desk works fully without it.</p>
           <div id="setStatus" class="set-status">…</div>
           <label class="set-field"><span>Ollama host</span><input id="setHost" class="set-input" type="text" spellcheck="false" placeholder="http://127.0.0.1:11434"></label>
-          <label class="set-field"><span>Model</span><input id="setModel" class="set-input" type="text" spellcheck="false" placeholder="gemma3:1b" list="setModelList"><datalist id="setModelList"></datalist></label>
+          <label class="set-field"><span>Model</span><input id="setModel" class="set-input" type="text" spellcheck="false" placeholder="qwen2.5:7b" list="setModelList"><datalist id="setModelList"></datalist></label>
           <div class="set-actions"><button class="set-btn ghost" id="setTest">Test connection</button><button class="set-btn primary" id="setSave">Save</button></div>
-          <p class="set-hint">First time? Install <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a>, then run <code>ollama pull gemma3:1b</code>. Whisper downloads automatically on first use.</p>
+          <p class="set-hint">First time? Install <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a>, then run <code>ollama pull qwen2.5:7b</code>. Whisper downloads automatically on first use.</p>
         </div>
       </div>
     </div>
@@ -1191,9 +1202,11 @@
     </div>
     <div class="toast-wrap" id="toastWrap"></div>
     <div class="voicep" id="voicePanel" aria-hidden="true">
-      <div class="vp-head"><span class="vp-title">Talk to Desk</span><span class="vp-sub">local · gemma + whisper</span><button class="vp-close" id="vpClose" aria-label="Close voice">×</button></div>
-      <div class="vp-log" id="vpLog"><div class="vp-empty">Tap the mic and speak — e.g. “add buy milk tomorrow at 3pm”, “mark the design review done”, or “what’s due today?”</div></div>
-      <div class="vp-foot"><button class="vp-mic" id="vpMic" aria-label="Tap to talk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11z"/></svg></button><div class="vp-status" id="vpStatus">Tap the mic and speak</div></div>
+      <button class="vp-close" id="vpClose" aria-label="Close voice">×</button>
+      <div class="vp-head"><span class="vp-title">Talk to Desk</span><span class="vp-sub">on-device · whisper + your model</span></div>
+      <div class="vp-stage"><canvas class="vp-orb" id="vpOrb" width="300" height="300" aria-hidden="true"></canvas><div class="vp-status" id="vpStatus">Tap the mic and speak</div></div>
+      <div class="vp-log" id="vpLog"><div class="vp-empty">Tap the mic and just talk — e.g. “add buy milk tomorrow at 3pm”, “a goal to read 12 books this year”, or “take me to stickies.”</div></div>
+      <button class="vp-mic" id="vpMic" aria-label="Tap to talk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11z"/></svg></button>
     </div>
     <div class="nowplay" id="nowPlay" aria-hidden="true" aria-live="polite" title="Now playing in Chrome">
       <div class="np-top">
@@ -1972,7 +1985,7 @@
   /* ---- Layer 1: theming ---- */
   let dark=false;
   let dnd=false;                       // Do-Not-Disturb (system sounds + alerts); persisted
-  let settings={ ollamaHost:'http://127.0.0.1:11434', ollamaModel:'gemma3:1b' };  // Voice & AI (Mac app); persisted + pushed to main
+  let settings={ ollamaHost:'http://127.0.0.1:11434', ollamaModel:'qwen2.5:7b' };  // Voice & AI (Mac app); persisted + pushed to main
   const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4l1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4l1.4-1.4"/></svg>';
   const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
   const themeBtn=$('themeBtn');
@@ -2451,14 +2464,29 @@
   /* ---- voice mode: mic → local Whisper (main) → Gemma (main) → board actions ---- */
   (function(){
     const panel=$('voicePanel'), btn=$('voiceFab'), micBtn=$('vpMic'), closeBtn=$('vpClose'), logEl=$('vpLog'), statusEl=$('vpStatus');
+    // ---- reactive voice orb: breathes when idle, pulses with live mic amplitude, shimmers while thinking ----
+    const orb=$('vpOrb'), octx=orb?orb.getContext('2d'):null; let micLevel=0, orbState='idle', orbRAF=0;
+    const orbReduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+    function orbSize(){ if(!orb) return; const dpr=Math.min(devicePixelRatio||1,2), w=orb.clientWidth||300; orb.width=Math.round(w*dpr); orb.height=Math.round(w*dpr); }
+    function drawOrb(ts){ if(!octx || !panel.classList.contains('open')){ orbRAF=0; return; } orbRAF=requestAnimationFrame(drawOrb);
+      micLevel*=0.86; const W=orb.width,H=orb.height,cx=W/2,cy=H/2,R=Math.min(W,H)*0.5,t=(ts||0)/1000;
+      octx.clearRect(0,0,W,H);
+      const breathe=orbReduce?0:(0.5+0.5*Math.sin(t*1.4));
+      const amp=orbState==='listening'?Math.min(1,micLevel*7):0;
+      const base=R*(orbState==='thinking'?(0.40+0.045*Math.sin(t*5)):(0.34+0.05*breathe));
+      const rad=base*(1+amp*0.5), acc=orbState==='thinking'?[150,150,148]:[255,74,28], r=acc[0],g=acc[1],b=acc[2];
+      let gl=octx.createRadialGradient(cx,cy,rad*0.2,cx,cy,rad*2.05); gl.addColorStop(0,'rgba('+r+','+g+','+b+','+(0.30+amp*0.4).toFixed(3)+')'); gl.addColorStop(1,'rgba('+r+','+g+','+b+',0)'); octx.fillStyle=gl; octx.beginPath(); octx.arc(cx,cy,rad*2.05,0,7); octx.fill();
+      let gc=octx.createRadialGradient(cx-rad*0.28,cy-rad*0.28,rad*0.08,cx,cy,rad); gc.addColorStop(0,'rgba(255,190,160,0.96)'); gc.addColorStop(0.55,'rgba('+r+','+g+','+b+',0.95)'); gc.addColorStop(1,'rgba('+Math.max(0,r-70)+','+Math.max(0,g-18)+','+b+',0.88)'); octx.fillStyle=gc; octx.beginPath(); octx.arc(cx,cy,rad,0,7); octx.fill();
+      if(orbState==='listening') for(let i=0;i<2;i++){ const rr=rad*(1.18+i*0.42)+amp*rad*0.6; octx.strokeStyle='rgba('+r+','+g+','+b+','+(0.16*(1-i*0.4)*(0.5+amp)).toFixed(3)+')'; octx.lineWidth=Math.max(1,R*0.012); octx.beginPath(); octx.arc(cx,cy,rr,0,7); octx.stroke(); } }
+    function orbStart(){ orbSize(); if(!orbRAF && octx) orbRAF=requestAnimationFrame(drawOrb); }
     if(!btn||!panel) return;
     const voiceOn=!!(window.desk && window.desk.voiceAvailable);
     let recording=false, busy=false, warmed=false, recTimer=null, ac=null, src=null, proc=null, stream=null, buffers=[], inRate=48000;
 
-    function openPanel(){ panel.classList.add('open'); panel.setAttribute('aria-hidden','false'); app.classList.add('voice-open'); if(voiceOn && !warmed){ warmed=true; vstatus('Preparing voice model…'); Promise.resolve(window.desk.voiceTranscribe(new Float32Array(1600))).catch(()=>{}).then(()=>{ if(!recording&&!busy) vstatus('Tap the mic and speak'); }); } }
+    function openPanel(){ panel.classList.add('open'); panel.setAttribute('aria-hidden','false'); app.classList.add('voice-open'); orbStart(); if(voiceOn && !warmed){ warmed=true; vstatus('Preparing voice model…'); Promise.resolve(window.desk.voiceTranscribe(new Float32Array(1600))).catch(()=>{}).then(()=>{ if(!recording&&!busy) vstatus('Tap the mic and speak'); }); } }
     function closePanel(){ panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); app.classList.remove('voice-open'); if(recording) stopRec(); }
     function vstatus(t){ if(statusEl) statusEl.textContent=t; }
-    function micState(s){ micBtn.classList.remove('listening','thinking'); if(s) micBtn.classList.add(s); }
+    function micState(s){ micBtn.classList.remove('listening','thinking'); if(s) micBtn.classList.add(s); orbState=s||'idle'; }
     function addBubble(role,text){ const e=logEl.querySelector('.vp-empty'); if(e) e.remove(); const b=document.createElement('div'); b.className='vp-msg '+role; b.textContent=text; logEl.appendChild(b); logEl.scrollTop=logEl.scrollHeight; }
 
     btn.addEventListener('click', ()=>{ panel.classList.contains('open')?closePanel():openPanel(); });
@@ -2474,7 +2502,7 @@
       try{ stream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:true}}); }catch(e){ vstatus('No microphone access'); return; }
       try{ ac=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ vstatus('Audio unavailable'); cleanupStream(); return; }
       inRate=ac.sampleRate; src=ac.createMediaStreamSource(stream); proc=ac.createScriptProcessor(4096,1,1); buffers=[];
-      proc.onaudioprocess=ev=>{ buffers.push(Float32Array.from(ev.inputBuffer.getChannelData(0))); };
+      proc.onaudioprocess=ev=>{ const d=ev.inputBuffer.getChannelData(0); buffers.push(Float32Array.from(d)); let s=0,k=0; for(let i=0;i<d.length;i+=8){ s+=d[i]*d[i]; k++; } const rms=k?Math.sqrt(s/k):0; if(rms>micLevel) micLevel=rms; };
       const mute=ac.createGain(); mute.gain.value=0; src.connect(proc); proc.connect(mute); mute.connect(ac.destination);
       recording=true; micState('listening'); vstatus('Listening… tap to stop');
       recTimer=setTimeout(()=>{ if(recording) stopRec(); }, 20000);
@@ -2499,38 +2527,66 @@
       micState(''); vstatus('Tap the mic and speak'); busy=false;
     }
 
-    const SCHEMA={ type:'object', properties:{ reply:{type:'string'}, action:{type:'string',enum:['add','complete','delete','list','none']}, title:{type:'string'} }, required:['reply','action'] };
-    function ctxLines(){ const sec=state.sections[state.active], out=[]; sec.projects.forEach(p=>p.tasks.filter(t=>!t.done).forEach(t=>{ if(out.length<40) out.push('- '+t.title+(t.due?(' (due '+fmtDueRel(t.due)+')'):'')); })); return out.join('\n')||'(no open tasks)'; }
-    function sysPrompt(){ return "You are Desk's voice assistant. Turn the user's spoken request into ONE action and a short friendly reply.\n- add: creating a task — put the full task wording (with any date/time) in \"title\".\n- complete: marking a task done — put the task name in \"title\".\n- delete: removing a task — put the task name in \"title\".\n- list: asking what's on the list or due — \"title\" empty.\n- none: chit-chat or unclear — \"title\" empty.\nExamples:\n\"remind me to buy milk tomorrow at 3pm\" => {\"reply\":\"Added — buy milk tomorrow at 3pm.\",\"action\":\"add\",\"title\":\"buy milk tomorrow at 3pm\"}\n\"mark the design review as done\" => {\"reply\":\"Nice — marked the design review done.\",\"action\":\"complete\",\"title\":\"design review\"}\n\"what's due today\" => {\"reply\":\"Here's what's due today.\",\"action\":\"list\",\"title\":\"\"}\nCurrent open tasks:\n"+ctxLines(); }
+    // ---- Conversational agent: utterance -> { reply, actions[] } -> confirm -> execute via existing app fns ----
+    const SCHEMA={ type:'object', properties:{ reply:{type:'string'}, actions:{ type:'array', items:{ type:'object', properties:{
+      tool:{ type:'string', enum:['add_task','add_goal','add_habit','add_sticky','start_focus','go','none'] },
+      title:{type:'string'}, due:{type:'string'}, target:{type:'number'}, unit:{type:'string'}, deadline:{type:'string'}, emoji:{type:'string'}, text:{type:'string'}, dest:{type:'string'} }, required:['tool'] } } }, required:['reply','actions'] };
+    function ctxLines(){ const sec=state.sections[state.active], out=[]; sec.projects.forEach(p=>p.tasks.filter(t=>!t.done).forEach(t=>{ if(out.length<25) out.push('- '+t.title+(t.due?(' (due '+fmtDueRel(t.due)+')'):'')); }));
+      const g=(state.goals||[]).slice(0,8).map(x=>'- '+x.name).join('\n'); const h=(state.habits||[]).filter(x=>!x.archived).slice(0,8).map(x=>'- '+(x.emoji?x.emoji+' ':'')+x.name).join('\n');
+      return 'Today is '+toISO(today)+'. Active workspace: '+sec.label+'.\nOpen tasks:\n'+(out.join('\n')||'(none)')+(g?('\nGoals:\n'+g):'')+(h?('\nHabits:\n'+h):''); }
+    function sysPrompt(){ return "You are Desk, a calm on-device assistant. Turn the user's words into a short friendly reply plus a list of ACTIONS. Use several actions if they ask for several things; use an empty list for chit-chat or questions.\nTools:\n- add_task: a to-do. Put the full wording incl any date/time in \"title\".\n- add_goal: a measurable goal. \"title\"=name, \"target\"=number, \"unit\"=books/km/pages/etc, \"deadline\"=YYYY-MM-DD if implied.\n- add_habit: a recurring habit. \"title\"=name, \"emoji\" optional.\n- add_sticky: a quick note. \"text\"=the note.\n- start_focus: begin a focus session. \"title\"=task name if specified.\n- go: navigate. \"dest\" one of home, tasks, pipeline, stickies, goals, office, building.\n- none: nothing to do.\nReturn ONLY JSON for the schema. Examples:\n\"add buy milk tomorrow and a goal to read 12 books this year\" => {\"reply\":\"Sure — a task and a goal.\",\"actions\":[{\"tool\":\"add_task\",\"title\":\"buy milk tomorrow\"},{\"tool\":\"add_goal\",\"title\":\"Read 12 books\",\"target\":12,\"unit\":\"books\",\"deadline\":\""+toISO(dPlus(180))+"\"}]}\n\"start focusing on the wireframes\" => {\"reply\":\"Heads down.\",\"actions\":[{\"tool\":\"start_focus\",\"title\":\"wireframes\"}]}\n\"take me to stickies\" => {\"reply\":\"Opening Stickies.\",\"actions\":[{\"tool\":\"go\",\"dest\":\"stickies\"}]}\n\nContext:\n"+ctxLines(); }
 
+    let pendingConfirm=null;
     async function handle(text){
+      if(pendingConfirm){ const t=text.trim().toLowerCase();
+        if(/^(yes|yeah|yep|yup|confirm|do it|sure|ok|okay|please)\b/.test(t)){ commitConfirm(); return; }
+        if(/^(no|nope|cancel|never ?mind|stop|don'?t)\b/.test(t)){ cancelConfirm(); return; }
+        cancelConfirm(true); }
       let res; try{ res=await window.desk.voiceAsk({ schema:SCHEMA, messages:[{role:'system',content:sysPrompt()},{role:'user',content:text}] }); }catch(e){ res={ok:false,error:String(e&&e.message||e)}; }
-      if(!res || !res.ok){ addBubble('assistant', (res&&res.error)||'Gemma unavailable — is Ollama running?'); return; }
+      if(!res || !res.ok){ addBubble('assistant', (res&&res.error)||'Model unavailable — is Ollama running? Check Desk ▾ → Voice & AI.'); return; }
       const obj=parseJSON(res.content);
       if(!obj){ addBubble('assistant', res.content||'…'); return; }
-      addBubble('assistant', act(obj, text) || obj.reply || 'Done.');
+      if(obj.reply) addBubble('assistant', obj.reply);
+      const acts=(Array.isArray(obj.actions)?obj.actions:[]).filter(a=>a&&a.tool&&a.tool!=='none');
+      const creates=acts.filter(a=>/^add_/.test(a.tool)), others=acts.filter(a=>!/^add_/.test(a.tool));
+      others.forEach(a=>{ const s=execAction(a); if(s) addBubble('action', s); });
+      if(creates.length) proposeConfirm(creates);
+      else if(!obj.reply && !others.length) addBubble('assistant','Okay.');
     }
+    function proposeConfirm(creates){ pendingConfirm={ actions:creates };
+      const card=document.createElement('div'); card.className='vp-confirm';
+      card.innerHTML='<div class="vpc-h">'+(creates.length>1?('Create these '+creates.length+'?'):'Create this?')+'</div>'+
+        creates.map(a=>'<div class="vpc-row"><span class="vpc-kind">'+kindLabel(a.tool)+'</span><span class="vpc-txt">'+esc(previewText(a))+'</span></div>').join('')+
+        '<div class="vpc-act"><button class="vpc-btn no">No</button><button class="vpc-btn yes">Yes</button></div>';
+      logEl.appendChild(card); logEl.scrollTop=logEl.scrollHeight;
+      card.querySelector('.yes').onclick=commitConfirm; card.querySelector('.no').onclick=()=>cancelConfirm();
+      pendingConfirm.card=card; vstatus('Say “yes” to confirm, or “no”'); }
+    function commitConfirm(){ if(!pendingConfirm) return; const acts=pendingConfirm.actions, card=pendingConfirm.card; pendingConfirm=null; if(card) card.classList.add('committed'); acts.forEach(a=>{ const s=execAction(a); if(s) addBubble('action', s); }); vstatus('Tap the mic and speak'); }
+    function cancelConfirm(silent){ if(!pendingConfirm) return; const card=pendingConfirm.card; pendingConfirm=null; if(card) card.remove(); if(!silent){ addBubble('assistant','Okay, cancelled.'); vstatus('Tap the mic and speak'); } }
     function parseJSON(s){ if(!s) return null; try{ return JSON.parse(s); }catch(_){} const a=s.indexOf('{'), b=s.lastIndexOf('}'); if(a>=0&&b>a){ try{ return JSON.parse(s.slice(a,b+1)); }catch(__){} } return null; }
     function stripLeadIns(s){ return (s||'').replace(/^\s*(hey desk[,\s]*)?(can you |could you |please |i want to |i need to )*(add (a )?(task|reminder|note)( (to|for|that))?|remind me (to )?|note (to )?|new task[:,]?|create (a )?task( to)?)\s*/i,'').trim()||s; }
     function matchTask(q){ q=(q||'').toLowerCase().trim(); if(!q) return null; let best=null,sc=0;
       for(const sk in state.sections) for(const p of state.sections[sk].projects) for(const t of p.tasks){ if(t.done) continue; const tl=t.title.toLowerCase(); let s=0; if(tl===q) s=100; else if(tl.includes(q)||q.includes(tl)) s=20; else { const w=q.split(/\s+/).filter(x=>x.length>2); s=w.filter(x=>tl.includes(x)).length; } if(s>sc){ sc=s; best=t; } }
       return sc>0?best:null; }
-    function removeEverywhere(id){ for(const sk in state.sections) for(const p of state.sections[sk].projects){ const i=p.tasks.findIndex(x=>x.id===id); if(i>=0){ const [t]=p.tasks.splice(i,1); renderBoard(); renderCal(); toast('Deleted — '+t.title,'Undo',()=>{ p.tasks.splice(Math.min(i,p.tasks.length),0,t); renderBoard(); renderCal(); }); return true; } } return false; }
-
-    function act(obj, transcript){
-      const sec=state.sections[state.active], inbox=sec.projects.find(p=>p.inbox)||sec.projects[0];
-      if(obj.action==='add'){
-        let raw=(obj.title && obj.title.trim().split(/\s+/).length>=2)?obj.title:transcript; raw=stripLeadIns(raw);
-        const {title,due,dueTime,tags}=parseQuickDue(raw); if(!title) return 'I didn’t catch a task to add.';
-        const t={id:'t'+(idc++),title,done:false}; if(due)t.due=due; if(dueTime)t.dueTime=dueTime; if(tags&&tags.length)t.tags=tags;
-        inbox.tasks.push(t); renderBoard(); renderCal();
-        return obj.reply || ('Added — '+title+(due?(' · '+fmtDueRel(due)+(dueTime?' '+fmtTime(dueTime):'')):''));
-      }
-      if(obj.action==='complete'){ const t=matchTask(obj.title||transcript); if(!t) return 'Couldn’t find that task to complete.'; t.done=true; t.status='done'; renderBoard(); renderCal(); try{ tickSound(); confettiBurst(innerWidth/2, innerHeight*0.42); }catch(_){} return obj.reply||('Marked done — '+t.title); }
-      if(obj.action==='delete'){ const t=matchTask(obj.title||transcript); if(!t) return 'Couldn’t find that task to delete.'; const name=t.title; removeEverywhere(t.id); return obj.reply||('Deleted — '+name); }
-      if(obj.action==='list'){ const low=(transcript||'').toLowerCase(); if(/overdue/.test(low)) state.filter={mode:'overdue',tag:null}; else if(/today/.test(low)) state.filter={mode:'today',tag:null}; setView('tasks'); renderBoard(); return obj.reply||'Here’s your list.'; }
-      return obj.reply||'';
-    }
+    function agentInbox(){ const sec=state.sections[state.active]; return sec.projects.find(p=>p.inbox)||sec.projects[0]; }
+    function agentSticky(text){ const list=curList(); const s={ id:'k'+(idc++), text:text, color:activeColor, x:rand(40,360), y:rand(40,240), rot:rand(-5,5) }; list.push(s); if(state.view==='stickies'){ buildSticky(s); try{ renderMini(); }catch(_){} } return s; }
+    function kindLabel(tool){ return ({add_task:'Task',add_goal:'Goal',add_habit:'Habit',add_sticky:'Sticky'})[tool]||tool; }
+    function previewText(a){ if(a.tool==='add_task'){ const r=parseQuickDue(stripLeadIns(a.title||'')); return (r.title||a.title||'')+(r.due?(' · '+fmtDueRel(r.due)+(r.dueTime?' '+fmtTime(r.dueTime):'')):''); }
+      if(a.tool==='add_goal') return (a.title||'')+(a.target?(' · '+a.target+(a.unit?' '+a.unit:'')):'')+(a.deadline?(' · by '+a.deadline):'');
+      if(a.tool==='add_habit') return (a.emoji?a.emoji+' ':'')+(a.title||'');
+      if(a.tool==='add_sticky') return (a.text||a.title||''); return a.title||''; }
+    function execAction(a){
+      if(a.tool==='add_task'){ const raw=stripLeadIns(a.title||''); const inbox=agentInbox(); addTaskTo(inbox.id, raw); const t=inbox.tasks[inbox.tasks.length-1];
+        if(t) toast('Added — '+t.title,'Undo',()=>{ const i=inbox.tasks.indexOf(t); if(i>=0){ inbox.tasks.splice(i,1); renderBoard(); renderCal(); } }); return '✓ Task · '+(t?t.title:raw); }
+      if(a.tool==='add_goal'){ const g={ id:uid('g'), name:(a.title||'Goal').trim(), target:+a.target||1, unit:a.unit||'', deadline:a.deadline||undefined, sources:[], manual:0, createdAt:toISO(today) }; state.goals.push(g);
+        if(state.view==='goals') renderGoals(); schedulePersist(); try{ pushWidgets(); }catch(_){} toast('Goal added — '+g.name,'Undo',()=>{ const i=state.goals.indexOf(g); if(i>=0)state.goals.splice(i,1); if(state.view==='goals')renderGoals(); }); return '✓ Goal · '+g.name+(g.target?(' · '+g.target+(g.unit?' '+g.unit:'')):''); }
+      if(a.tool==='add_habit'){ const h={ id:uid('h'), name:(a.title||'Habit').trim(), emoji:(a.emoji||'').slice(0,2), schedule:'daily', log:{}, createdAt:toISO(today) }; state.habits.push(h);
+        if(state.view==='goals') renderGoals(); schedulePersist(); try{ pushWidgets(); }catch(_){} toast('Habit added — '+h.name,'Undo',()=>{ const i=state.habits.indexOf(h); if(i>=0)state.habits.splice(i,1); if(state.view==='goals')renderGoals(); }); return '✓ Habit · '+(h.emoji?h.emoji+' ':'')+h.name; }
+      if(a.tool==='add_sticky'){ const txt=(a.text||a.title||'').trim(); if(!txt) return ''; setView('stickies'); requestAnimationFrame(()=>agentSticky(txt)); return '✓ Sticky · '+txt.slice(0,46); }
+      if(a.tool==='start_focus'){ if(a.title){ const t=matchTask(a.title); if(t) setFocusTask(t.id); } if(!state.focus.running) startPause(); try{ openZen(true); }catch(_){} return '✓ Focus started'+(a.title?(' · '+a.title):''); }
+      if(a.tool==='go'){ const d=(a.dest||a.title||'').toLowerCase().trim(); if(d==='office'||d==='building') setWorld(d); else if(['home','tasks','pipeline','stickies','goals'].includes(d)) setView(d); else return ''; return '→ '+d; }
+      return ''; }
+    window.__deskAgent = handle;   // preview/test hook (drive the agent with text)
   })();
 
   function initSplashGl(canvasId){ const cv=document.getElementById(canvasId||'splashGl'); if(!cv) return null; let gl; try{ gl=cv.getContext('webgl',{antialias:true,preserveDrawingBuffer:true})||cv.getContext('experimental-webgl'); }catch(_){ } if(!gl) return null;
@@ -2677,7 +2733,7 @@
       if(isApp) test(); else setStatus('Voice & AI run in the Desk Mac app — these settings apply there.'); }
     function close(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); document.removeEventListener('keydown', esc); }
     function esc(e){ if(e.key==='Escape') close(); }
-    function save(){ settings.ollamaHost=(hostEl.value.trim()||'http://127.0.0.1:11434').replace(/\/+$/,''); settings.ollamaModel=modelEl.value.trim()||'gemma3:1b';
+    function save(){ settings.ollamaHost=(hostEl.value.trim()||'http://127.0.0.1:11434').replace(/\/+$/,''); settings.ollamaModel=modelEl.value.trim()||'qwen2.5:7b';
       try{ window.desk&&window.desk.voiceSetConfig&&window.desk.voiceSetConfig(settings); }catch(_){} schedulePersist(); toast('Voice & AI settings saved'); close(); }
     $('setClose').addEventListener('click', close);
     $('setTest').addEventListener('click', test);

@@ -227,7 +227,7 @@ ipcMain.on('capture-cancel', () => { if (captureWin) captureWin.hide(); });
 // ---- Voice & AI config: where the local LLM lives. Persisted so other users can point Desk at
 // their own Ollama host / model from the in-app Settings page (defaults to a local Ollama + gemma3:1b). ----
 function aiCfgPath() { return path.join(app.getPath('userData'), 'desk-ai-config.json'); }
-let aiCfg = { ollamaHost: 'http://127.0.0.1:11434', ollamaModel: 'gemma3:1b' };
+let aiCfg = { ollamaHost: 'http://127.0.0.1:11434', ollamaModel: 'qwen2.5:7b' };  // conversational agent; switchable in Settings → Voice & AI
 function loadAiCfg() { try { const s = JSON.parse(fs.readFileSync(aiCfgPath(), 'utf8')); if (s && typeof s === 'object') aiCfg = Object.assign(aiCfg, s); } catch (_) {} }
 function saveAiCfg() { try { fs.writeFileSync(aiCfgPath(), JSON.stringify(aiCfg)); } catch (_) {} }
 ipcMain.handle('voice:getConfig', () => aiCfg);
@@ -256,7 +256,7 @@ function getAsr() {
     tf.env.allowLocalModels = true;
     tf.env.localModelPath = path.join(__dirname, 'models');  // use a bundled model if present…
     tf.env.allowRemoteModels = true;                         // …otherwise auto-download from HuggingFace on first use (~40MB, cached)
-    return tf.pipeline('automatic-speech-recognition', 'Xenova/whisper-base.en', { dtype: 'q8' });
+    return tf.pipeline('automatic-speech-recognition', 'Xenova/whisper-small.en', { dtype: 'q8' });  // small = more accurate (voice is the primary input); auto-downloads (~240MB) on first use
   })();
   return asrPromise;
 }
