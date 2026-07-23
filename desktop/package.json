@@ -1,6 +1,6 @@
 {
   "name": "desk-desktop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Desk — the macOS (Electron) wrapper: menubar, desktop buddy, Übersicht bridge, and local voice + AI.",
   "main": "main.js",
   "scripts": {
