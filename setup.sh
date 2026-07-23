@@ -27,10 +27,10 @@ fi
 
 # --- Pull the default model (optional) ---
 if command -v ollama >/dev/null 2>&1; then
-  read -r -p "Pull the default model 'gemma3:1b' (~0.8GB) now? [y/N] " ans
+  read -r -p "Pull the default model 'qwen2.5:7b' (~4.7GB) now? [y/N] " ans
   if [[ "$ans" =~ ^[Yy]$ ]]; then
     ( ollama serve >/dev/null 2>&1 & ) ; sleep 2
-    ollama pull gemma3:1b || echo "  couldn't pull — run 'ollama pull gemma3:1b' later"
+    ollama pull qwen2.5:7b || echo "  couldn't pull — run 'ollama pull qwen2.5:7b' later"
   fi
 fi
 

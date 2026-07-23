@@ -36,7 +36,7 @@ The menubar (tray) icon gives you **Open Desk**, **Quick capture (⌥⌘Space)**
 
 Desk turns speech into tasks privately — nothing leaves your machine.
 
-- **Speech → text:** Whisper (`Xenova/whisper-base.en`) via `@huggingface/transformers`. It **auto-downloads (~40MB) on first use** and is cached. No setup needed.
+- **Speech → text:** Whisper (`Xenova/whisper-small.en`) via `@huggingface/transformers`. The packaged **DMG release bundles the model**, so voice works fully offline — no setup, no download. A from-source build **auto-downloads it (~240MB) on first use** and caches it, so the first voice use needs network once. (On a restricted network that blocks Hugging Face, use the bundled release instead.)
 - **Text → intent:** a local LLM via **[Ollama](https://ollama.com)**.
 
 ### Set up the LLM (one time)
@@ -48,18 +48,18 @@ brew install ollama            # or download from https://ollama.com
 # 2. Start it (Ollama usually runs as a background service after install)
 ollama serve                   # if it isn't already running
 
-# 3. Pull the default model (~0.8GB)
-ollama pull gemma3:1b
+# 3. Pull the default model (~4.7GB)
+ollama pull qwen2.5:7b
 ```
 
-Prefer a bigger/smaller model? Pull any chat model (e.g. `ollama pull gemma3:4b` or `llama3.2:3b`) and select it in step below.
+Prefer a lighter model for a low-RAM machine? Pull any chat model (e.g. `ollama pull qwen2.5:3b` or `llama3.2:3b`) and select it in the step below.
 
 ### Connect Desk to it
 
 Open Desk → click **`Desk ▾`** (top-left menu) → **Voice & AI…**:
 
 - **Ollama host** — default `http://127.0.0.1:11434` (change if Ollama runs elsewhere).
-- **Model** — default `gemma3:1b` (type any model you've pulled; the field suggests installed ones).
+- **Model** — default `qwen2.5:7b` (type any model you've pulled; the field suggests installed ones).
 - **Test connection** — confirms Ollama is reachable and the model is installed.
 - **Save.**
 

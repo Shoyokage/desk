@@ -33,10 +33,10 @@ Tasks, a Pipeline kanban, a Stickies canvas, and Goals & Habits live inside swit
 
 Desk can take spoken input and turn it into tasks — privately, offline:
 
-- **Speech → text:** [Whisper](https://huggingface.co/Xenova/whisper-base.en) via `@huggingface/transformers` (auto-downloads ~40MB on first use, then cached).
-- **Text → intent:** a local LLM through **[Ollama](https://ollama.com)** (default model `gemma3:1b`).
+- **Speech → text:** [Whisper](https://huggingface.co/Xenova/whisper-small.en) (`small.en`) via `@huggingface/transformers`. The DMG release **bundles the model**, so voice works fully offline with no download. A from-source build auto-downloads it (~240MB) on first use, then caches it — so the first voice use needs network once (a restricted network can block this; use the bundled release if so).
+- **Text → intent:** a local LLM through **[Ollama](https://ollama.com)** (default model `qwen2.5:7b`).
 
-Set it up once: install Ollama, run `ollama pull gemma3:1b`, then open **Desk → `Desk ▾` menu → Voice & AI…** and hit **Test connection**. You can point Desk at any Ollama host or model from that screen. Full steps in [`SETUP.md`](SETUP.md).
+Set it up once: install Ollama, run `ollama pull qwen2.5:7b`, then open **Desk → `Desk ▾` menu → Voice & AI…** and hit **Test connection**. You can point Desk at any Ollama host or model from that screen. Full steps in [`SETUP.md`](SETUP.md).
 
 ## What's in the box
 

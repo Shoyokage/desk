@@ -255,8 +255,14 @@ function getAsr() {
     const tf = await import('@huggingface/transformers');
     tf.env.allowLocalModels = true;
     tf.env.localModelPath = path.join(__dirname, 'models');  // use a bundled model if present…
-    tf.env.allowRemoteModels = true;                         // …otherwise auto-download from HuggingFace on first use (~40MB, cached)
-    return tf.pipeline('automatic-speech-recognition', 'Xenova/whisper-small.en', { dtype: 'q8' });  // small = more accurate (voice is the primary input); auto-downloads (~240MB) on first use
+    tf.env.allowRemoteModels = true;                         // …otherwise auto-download from HuggingFace on first use (~240MB, cached)
+    // session_options disable onnxruntime's CPU memory arena — under Electron's V8 build the arena
+    // (BFCArena::Extend) traps with SIGTRAP and crashes the app; disabling it transcribes cleanly,
+    // at a negligible perf cost for short clips. Works in-process (no subprocess / system node needed).
+    return tf.pipeline('automatic-speech-recognition', 'Xenova/whisper-small.en', {
+      dtype: 'q8',                                                    // bundled in models/ → loads fully offline (a source clone without models/ auto-downloads once)
+      session_options: { enableCpuMemArena: false, enableMemPattern: false },
+    });
   })();
   return asrPromise;
 }
@@ -276,7 +282,7 @@ ipcMain.handle('voice:transcribe', async (_e, pcm) => {
 });
 ipcMain.handle('voice:ask', async (_e, payload) => {
   try {
-    const body = { model: aiCfg.ollamaModel, stream: false, options: { temperature: 0.2 }, messages: (payload && payload.messages) || [] };
+    const body = { model: aiCfg.ollamaModel, stream: false, options: { temperature: (payload && typeof payload.temperature === 'number') ? payload.temperature : 0.2 }, messages: (payload && payload.messages) || [] };
     if (payload && payload.schema) body.format = payload.schema;
     const r = await fetch(aiCfg.ollamaHost + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     if (!r.ok) return { ok: false, error: 'ollama ' + r.status };
